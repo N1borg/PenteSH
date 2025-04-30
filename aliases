@@ -1,0 +1,7 @@
+# Config file dedicated to the user's personal aliases shared between all exegol containers
+
+alias c='clear'
+alias clean='init_pentest_env'
+alias clean_logs='clean_pentest_env_logs'
+alias showenv='show_pentest_env'
+alias showlog='show_pentest_env_logs'
