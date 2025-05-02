@@ -1,52 +1,38 @@
 #~/.exegol/my-resources/setup/zsh/zshrc.zsh - Shared Zsh profile for Exegol pentest containers
 
-# === Environment Path ===
-ENV_PATH="$HOME/.zshenv"
-ENV_LOG="$HOME/.zshenv.log"
+# === Environment Log Path ===
+ENV_NAME=".pentest_env"
+ENV_PATH="$HOME"
+ENV_LOG="$ENV_PATH/$ENV_NAME.log"
 
 # === Environment Identification ===
-export IS_EXEGOL=false
-export IS_KALI=false
+is_exegol=false
+is_kali=false
 
 # Check if in Exegol or Kali environment
 if [[ -d "/.exegol" ]]; then
-  export IS_EXEGOL=true
+  is_exegol=true
 elif [ -f /etc/os-release ] && grep -qi "^ID=kali" /etc/os-release; then
-  export IS_KALI=true
+  is_kali=true
 elif command -v lsb_release &>/dev/null && lsb_release -is 2>/dev/null | grep -qi "kali"; then
-  export IS_KALI=true
+  is_kali=true
 fi
 
 autoload -Uz add-zsh-hook
 
-# === Save environment ===
-save_pentest_env() {
-  for var1 in INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST ADUSER PASSWORD NT_HASH; do
-    local value="${(P)var1}"
-    local entry="export ${var1}=\"${value}\""
-
-    if grep -q "^export ${var1}=" "$ENV_PATH" 2>/dev/null; then
-      sed -i "s|^export ${var1}=.*|$entry|" "$ENV_PATH"
-    elif grep -q "^${var1}=" "$ENV_PATH" 2>/dev/null; then
-      sed -i "s|^${var1}=.*|$entry|" "$ENV_PATH"
-    else
-      echo "$entry" >> "$ENV_PATH"
-    fi
-  done
-}
-
-# Log and save if tracked variable has changed
-log_and_save_if_tracked_var_changed() {
+# === Log and save changed variables ===
+log_changed_var() {
   local attacker_ip_old=""
   local attacker_ip_changed=false
 
-  for var2 in INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST ADUSER PASSWORD NT_HASH; do
-    local new_value="${(P)var2}"
-    local old_value="$(grep "${var2}=" "$ENV_PATH" 2>/dev/null | cut -d= -f2- | tr -d '"')"
+  local var
+  for var in INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST ADUSER PASSWORD NT_HASH; do
+    local new_value="${(P)var}"
+    local old_value="$(grep "${var}" "$ENV_LOG" 2>/dev/null | tail -n 1 | cut -d "'" -f 4)"
 
     if [[ "$new_value" != "$old_value" ]]; then
 
-      if [[ "$var2" == "INTERFACE" && -n "$INTERFACE" ]] && ip link show "$INTERFACE" &>/dev/null; then
+      if [[ "$var" == "INTERFACE" && -n "$INTERFACE" ]] && ip link show "$INTERFACE" &>/dev/null; then
         attacker_ip_old="$ATTACKER_IP"
         ATTACKER_IP="$(ip -4 addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d'/' -f1 | head -n1)"
 
@@ -57,13 +43,10 @@ log_and_save_if_tracked_var_changed() {
         fi
       fi
 
-      save_pentest_env
-      echo "[$(date +'%Y-%m-%d %H:%M:%S')] $var2 changed from '${old_value}' to '${new_value}'" >> "$ENV_LOG"
-      echo "🔄 Auto-saved & logged: $var2='$new_value'"
+      echo "[$(date +'%Y-%m-%d %H:%M:%S')] $var changed from '${old_value}' to '${new_value}'" >> "$ENV_LOG"
 
       if [[ "$attacker_ip_changed" == true ]]; then
         echo "[$(date +'%Y-%m-%d %H:%M:%S')] ATTACKER_IP changed from '${attacker_ip_old}' to '${ATTACKER_IP}'" >> "$ENV_LOG"
-        echo "🔄 Auto-saved & logged: ATTACKER_IP='$ATTACKER_IP'"
         attacker_ip_changed=false
       fi
     fi
@@ -71,7 +54,7 @@ log_and_save_if_tracked_var_changed() {
 }
 
 # Run check after every command prompt returns
-add-zsh-hook precmd log_and_save_if_tracked_var_changed
+add-zsh-hook precmd log_changed_var
 
 # === Initialize environment with defaults ===
 init_pentest_env() {
@@ -82,23 +65,18 @@ init_pentest_env() {
 
   if [[ -z "$INTERFACE" || ! $(ip link show "$INTERFACE" 2>/dev/null) ]]; then
     echo "⚠️  Warning: Could not detect a default network interface; falling back to \"lo\"" >&2
-    INTERFACE="lo"  # fallback to loopback to avoid breaking dependent logic
+    INTERFACE="lo"  # fallback to loopback
   fi
-
-  # Set the IP of the interface
-  if [[ -n "$INTERFACE" ]] && ip link show "$INTERFACE" &>/dev/null; then
-    ATTACKER_IP="$(ip -4 addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d'/' -f1 | head -n1)"
-  else
-    ATTACKER_IP=""
+  if [[ ! $(ip link show "$INTERFACE" 2>/dev/null) ]]; then
+    INTERFACE=
   fi
-
-  save_pentest_env
 }
 
 # === Show current values ===
 show_pentest_env() {
-  for var3 in INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST ADUSER PASSWORD NT_HASH; do
-    printf "%-12s : %s\n" "$var3" "${(P)var3}"
+  local var
+  for var in INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST ADUSER PASSWORD NT_HASH; do
+    printf "%-12s : %s\n" "$var" "${(P)var}"
   done
 }
 
@@ -109,14 +87,14 @@ show_pentest_env_logs() {
 
 # === Clean pentest_env logs ===
 clean_pentest_env_logs() {
-  echo "" > "$ENV_LOG"
+  cp "$ENV_LOG" "$ENV_LOG.bak.$(date +%s)" && : > "$ENV_LOG"
 }
 
 # === Prompt Enhancer ===
 internal_pentest_prompt() {
   local parts=()
 
-  if [[ "$IS_KALI" == true ]]; then
+  if [[ "$is_kali" == true ]]; then
     [[ -n "${ADUSER}" ]] && parts+=(" %F{yellow}[${ADUSER}%f")
     if [[ -n "${ADUSER}" || -n "${DOMAIN}" ]]; then
       if [[ -n "${ADUSER}" && -z "${DOMAIN}" ]]; then
@@ -145,19 +123,18 @@ internal_pentest_prompt() {
 
 # === Custom Prompt Hook ===
 if [[ -o interactive ]]; then
-  # Init the env
-  [[ -f "$ENV_PATH" ]] || init_pentest_env
+  init_pentest_env
 
-  if [[ "$IS_EXEGOL" == true ]]; then
+  if [[ "$is_exegol" == true ]]; then
     # === Overwrite Exegol's shell prompt ===
     update_prompt() {
       DB_PROMPT=""
 
-      if [[ ! -z "${USER}" ]]; then
+      if [[ -n "${USER}" ]]; then
         DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER}%{$fg[white]%}]%{$reset_color%}"
       fi
 
-      if [[ ! -z "${DOMAIN}" && ! -z "${USER}" ]]; then
+      if [[ -n "${DOMAIN}" && -n "${USER}" ]]; then
         DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER}@${DOMAIN}%{$fg[white]%}]%{$reset_color%}"
       fi
 
@@ -165,10 +142,7 @@ if [[ -o interactive ]]; then
 %{$fg_bold[blue]%}$(prompt_char)%{$reset_color%} "
     }
     update_prompt
-  elif [[ "$IS_KALI" == true ]]; then
+  elif [[ "$is_kali" == true ]]; then
     PROMPT=$'%F{%(#.blue.green)}┌──${debian_chroot:+($debian_chroot)─}${VIRTUAL_ENV:+($(basename $VIRTUAL_ENV))─}(%B%F{%(#.red.blue)}%n'㉿$'%m%b%F{%(#.blue.green)})-[%B%F{reset}%(6~.%-1~/…/%4~.%5~)%b%F{%(#.blue.green)}]$(internal_pentest_prompt)\n%F{%(#.blue.green)}└─%B%(#.%F{red}#.%F{blue}$)%b%F{reset} '
   fi
 fi
-
-# === Save on exit ===
-add-zsh-hook zshexit save_pentest_env
