@@ -79,6 +79,32 @@ init_pentest_env() {
   fi
 }
 
+# === Save pentest_env ===
+save_pentest_env() {
+  for var in "${PENTEST_ENV_VARS[@]}"; do
+    echo "export $var='${(P)var}'"
+  done > "$ENV_PATH/$ENV_NAME"
+  echo "export AUTO_CHANGE_ATTACKER_IP='${AUTO_CHANGE_ATTACKER_IP}'" >> "$ENV_PATH/$ENV_NAME"
+  echo "export SHOW_SENSITIVE='${SHOW_SENSITIVE}'" >> "$ENV_PATH/$ENV_NAME"
+
+  echo "Pentest Environment saved in '${ENV_PATH}/${ENV_NAME}'"
+}
+
+# === Load pentest_env ===
+load_pentest_env() {
+  local env_file="$ENV_PATH/$ENV_NAME"
+
+  if [[ -f "$env_file" ]]; then
+    if ! source "$env_file"; then
+      echo "❌ Failed to source the pentest environment from '$env_file'." >&2
+      return 1
+    fi
+  else
+    echo "⚠️  Pentest Environment file not found: '$env_file'" >&2
+    return 1
+  fi
+}
+
 # === Show current values ===
 show_pentest_env() {
   local var
@@ -97,17 +123,6 @@ show_pentest_env_logs() {
 # === Clean pentest_env logs ===
 clean_pentest_env_logs() {
   cp "$ENV_LOG" "$ENV_LOG.bak.$(date +%s)" && : > "$ENV_LOG"
-}
-
-# === Save pentest_env ===
-save_pentest_env() {
-  for var in "${PENTEST_ENV_VARS[@]}"; do
-    echo "export $var='${(P)var}'"
-  done > "$ENV_PATH/$ENV_NAME"
-  echo "export AUTO_CHANGE_ATTACKER_IP='${AUTO_CHANGE_ATTACKER_IP}'" >> "$ENV_PATH/$ENV_NAME"
-  echo "export SHOW_SENSITIVE='${SHOW_SENSITIVE}'" >> "$ENV_PATH/$ENV_NAME"
-
-  echo "Pentest Environment saved in '${ENV_PATH}/${ENV_NAME}'"
 }
 
 # === Prompt Enhancer ===
@@ -157,11 +172,7 @@ internal_pentest_prompt() {
 
 # === Custom Prompt Hook ===
 if [[ -o interactive ]]; then
-  if [[ $AUTO_LOAD_ENV == true && -f "$ENV_PATH/$ENV_NAME" ]]; then
-    source "$ENV_PATH/$ENV_NAME" || init_pentest_env
-  else
-    init_pentest_env
-  fi
+  [[ $AUTO_LOAD_ENV == true ]] && load_pentest_env || init_pentest_env
 
   if [[ "$PENTEST_ENVIRONMENT" == "exegol" ]]; then
     # === Overwrite Exegol's shell prompt ===
