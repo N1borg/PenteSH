@@ -5,20 +5,31 @@
 Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automatic updates, persistent storage, and a smart prompt overlay.
 
 *Example usage in Kali Linux*
+
 ![Example usage of PenteSH on Kali Linux](./assets/usage-in-kali.png)
+
 *Example with bloodhound-ce on Exegol*
+
 ![Example of PenteSH with bloodhound-ce](./assets/bloodhound-ce-example-exegol.png)
+
 *Example with smbclient-ng on Exegol*
+
 ![Example of PenteSH with smbclient-ng](./assets/smbclient-ng-example-exegol.png)
 
 ## 🎯 Purpose
 
 - ✅ Detects and identifies whether you're running inside **Exegol** or **Kali Linux**.
+
 - ✅ Automatically manages variables like `INTERFACE`, `ATTACKER_IP`, `TARGET`, `DOMAIN`, `DC_IP`, etc.
+
 - ✅ Updates `ATTACKER_IP` dynamically if your interface changes.
+
 - ✅ Logs every change to tracked variables in a persistent `.zshenv.log` file.
+
 - ✅ Enhances your Zsh prompt with contextual information.
+
 - ✅ Automatically saves the pentest session state after each command and upon shell exit.
+
 - ✅ Loads and saves the environment automatically with fallbacks if needed.
 
 ---
@@ -43,10 +54,15 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 ## 🔧 Features
 
 - **Auto-detection** of environment (`kali`, `exegol`)
+
 - **Smart prompt** that displays AD context, IPs, and more
+
 - **Automatic IP updates** when network interface changes
+
 - **Persistent session saving** on every prompt return (`precmd`)
+
 - **Change tracking** for audit/debug use
+
 - **Auto-load and auto-save environment** with fallbacks
 
 ---
@@ -98,31 +114,58 @@ You can customize the behavior of the environment manager by adjusting the follo
 ### 1. Boolean Variables
 
 - `AUTO_LOAD_ENV`
+    
     - **Type**: Boolean (`true` / `false`)
+    
     - **Default**: `true`
+    
     - **Description**: When set to `true`, the script will attempt to load the pentesting environment automatically from the specified file (`$ENV_PATH/$ENV_NAME`) during shell startup. If the file doesn't exist, it initializes a new default environment.
+
 - `SHOW_SENSITIVE`
+
     - **Type**: Boolean (`true` / `false`)
+
     - **Default**: `false`
-    - **Description**: Controls whether sensitive values like `PASSWORD` and `NT_HASH` are displayed in the prompt. If set to `false`, sensitive values are not displayed.
+
+    - **Description**: Controls whether sensitive values like `PASSWORD` and 
+    `NT_HASH` are displayed in the prompt. If set to `false`, sensitive values are 
+    not displayed.
+
 - `AUTO_CHANGE_ATTACKER_IP`
+
     - **Type**: Boolean (`true` / `false`)
+
     - **Default**: `false`
-    - **Description**: If enabled, the `ATTACKER_IP` will be automatically updated whenever the `INTERFACE` value is changed (e.g., on VPN toggle or network switch). Otherwise, it remains static unless changed manually
+
+    - **Description**: If enabled, the `ATTACKER_IP` will be automatically updated 
+    whenever the `INTERFACE` value is changed (e.g., on VPN toggle or network 
+    switch). Otherwise, it remains static unless changed manually
 
 ### 2. Environment Path Setup
 
+
 - `ENV_NAME`
+
     - **Type**: String (Directory Path)
+
     - **Default**: `.pentest_env`
+
     - **Description**: The name of your pentesting environment file.
+
 - `ENV_PATH`
+
     - **Type**: String (Directory Path)
+
     - **Default**: `$HOME`
+
     - **Description**: The directory where your pentesting environment and log files are stored.
+
 - `ENV_LOG`
+
     - **Type**: String (Directory Path)
+
     - **Default**: `$ENV_PATH/$ENV_NAME.log`
+
     - **Description**: The path of your pentesting environment log file.
 
 ## 📝 Logging Example
@@ -164,4 +207,5 @@ export AUTO_LOAD_ENV='true'
 ## Possible ideas
 
 - Add `$TargetObject` ?
+
 - Multiple environment and possibility to switch between them
