@@ -4,12 +4,12 @@
 
 Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automatic updates, persistent storage, and a smart prompt overlay.
 
-*Example usagein Kali Linux*
-![Example usage of PenteSH on Kali Linux](./Usage-in-kali.png)
+*Example usage in Kali Linux*
+![Example usage of PenteSH on Kali Linux](./assets/usage-in-kali.png)
 *Example with bloodhound-ce on Exegol*
-![Example of PenteSH with bloodhound-ce](./bloodhound-ce-example-exegol.png)
+![Example of PenteSH with bloodhound-ce](./assets/bloodhound-ce-example-exegol.png)
 *Example with smbclient-ng on Exegol*
-![Example of PenteSH with smbclient-ng](./smbclient-ng-example-exegol.png)
+![Example of PenteSH with smbclient-ng](./assets/smbclient-ng-example-exegol.png)
 
 ## 🎯 Purpose
 
@@ -18,7 +18,7 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 - ✅ Updates `ATTACKER_IP` dynamically if your interface changes.
 - ✅ Logs every change to tracked variables in a persistent `.zshenv.log` file.
 - ✅ Enhances your Zsh prompt with contextual information.
-- ✅ Auto-saves the pentest session state on each command and on shell exit.
+- ✅ Automatically saves the pentest session state after each command and upon shell exit.
 - ✅ Loads and saves the environment automatically with fallbacks if needed.
 
 ---
@@ -55,7 +55,7 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 
 ### 1. **Direct Source Integration**
 
-To seamlessly integrate this configuration with your system, source the `zshrc` directly into your default `.zshrc`.
+To integrate this configuration seamlessly with your system, source the `zshrc` directly into your default `.zshrc`.
 
 First, clone or copy the configuration file to your desired path:
 
@@ -160,4 +160,8 @@ export AUTO_LOAD_ENV='true'
 ## To-Do
 
 - Fix, on Exegol, `ATTACKER_IP` which changes only after the next prompt display when `INTERFACE` is modified, instead of updating immediately.
+
+## Possible ideas
+
 - Add `$TargetObject` ?
+- Multiple environment and possibility to switch between them
