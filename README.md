@@ -4,6 +4,13 @@
 
 Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automatic updates, persistent storage, and a smart prompt overlay.
 
+*Example usagein Kali Linux*
+![Example usage of PenteSH on Kali Linux](./Usage-in-kali.png)
+*Example with bloodhound-ce on Exegol*
+![Example of PenteSH with bloodhound-ce](./bloodhound-ce-example-exegol.png)
+*Example with smbclient-ng on Exegol*
+![Example of PenteSH with smbclient-ng](./smbclient-ng-example-exegol.png)
+
 ## 🎯 Purpose
 
 - ✅ Detects and identifies whether you're running inside **Exegol** or **Kali Linux**.
@@ -121,9 +128,15 @@ You can customize the behavior of the environment manager by adjusting the follo
 ## 📝 Logging Example
 
 ```log
-[2025-04-30 16:23:10] DOMAIN changed from '' to 'corp.local'
-[2025-05-02 07:51:11] INTERFACE changed from 'docker0' to 'eth0'
-[2025-05-02 07:51:11] ATTACKER_IP changed from '172.17.0.1' to '192.168.1.129'
+[2025-05-05 04:56:25] INTERFACE changed from '' to 'eth0'
+[2025-05-05 04:56:25] ATTACKER_IP changed from '' to '192.168.1.129'
+[2025-05-05 05:20:20] PASSWORD changed from '' to 'Changeme123'
+[2025-05-05 05:20:55] DOMAIN changed from '' to 'za.tryhackme.com'
+[2025-05-05 05:21:12] DC_IP changed from '' to '10.200.20.101'
+[2025-05-05 05:22:48] DC_HOST changed from '' to 'thmdc.za.tryhackme.com'
+[2025-05-05 05:29:33] INTERFACE changed from 'eth0' to 'tun0'
+[2025-05-05 05:29:44] INTERFACE changed from 'tun0' to 'breachad'
+[2025-05-05 05:29:44] ATTACKER_IP changed from '192.168.111.129' to '10.50.18.61'
 ```
 
 ## 🛠️ Pentest Environment Example
@@ -143,3 +156,8 @@ export AUTO_CHANGE_ATTACKER_IP='true'
 export SHOW_SENSITIVE='true'
 export AUTO_LOAD_ENV='true'
 ```
+
+## To-Do
+
+- Fix, on Exegol, `ATTACKER_IP` which changes only after the next prompt display when `INTERFACE` is modified, instead of updating immediately.
+- Add `$TargetObject` ?

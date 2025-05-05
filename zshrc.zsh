@@ -1,14 +1,14 @@
- ███████████                       █████              █████████  █████   █████
-░░███░░░░░███                     ░░███              ███░░░░░███░░███   ░░███ 
- ░███    ░███  ██████  ████████   ███████    ██████ ░███    ░░░  ░███    ░███ 
- ░██████████  ███░░███░░███░░███ ░░░███░    ███░░███░░█████████  ░███████████ 
- ░███░░░░░░  ░███████  ░███ ░███   ░███    ░███████  ░░░░░░░░███ ░███░░░░░███ 
- ░███        ░███░░░   ░███ ░███   ░███ ███░███░░░   ███    ░███ ░███    ░███ 
- █████       ░░██████  ████ █████  ░░█████ ░░██████ ░░█████████  █████   █████
-░░░░░         ░░░░░░  ░░░░ ░░░░░    ░░░░░   ░░░░░░   ░░░░░░░░░  ░░░░░   ░░░░░ 
-                                                                              
-                                                                              
-# """""""""""""""""""""" Hacking Differently. - Niborg """"""""""""""""""""""
+#  ███████████                       █████              █████████  █████   █████
+# ░░███░░░░░███                     ░░███              ███░░░░░███░░███   ░░███ 
+#  ░███    ░███  ██████  ████████   ███████    ██████ ░███    ░░░  ░███    ░███ 
+#  ░██████████  ███░░███░░███░░███ ░░░███░    ███░░███░░█████████  ░███████████ 
+#  ░███░░░░░░  ░███████  ░███ ░███   ░███    ░███████  ░░░░░░░░███ ░███░░░░░███ 
+#  ░███        ░███░░░   ░███ ░███   ░███ ███░███░░░   ███    ░███ ░███    ░███ 
+#  █████       ░░██████  ████ █████  ░░█████ ░░██████ ░░█████████  █████   █████
+# ░░░░░         ░░░░░░  ░░░░ ░░░░░    ░░░░░   ░░░░░░   ░░░░░░░░░  ░░░░░   ░░░░░ 
+
+
+# """""""""""""""""""""" Hacking Differently. - Niborg """""""""""""""""""""" #
 
 # === Environment Setup ===
 ENV_NAME=".pentest_env"
@@ -87,6 +87,9 @@ init_pentest_env() {
   if [[ ! $(ip link show "$INTERFACE" 2>/dev/null) ]]; then
     INTERFACE=
   fi
+  if [[ -n "$INTERFACE" && "$AUTO_CHANGE_ATTACKER_IP" == true ]] && ip link show "$INTERFACE" &>/dev/null; then
+    ATTACKER_IP="$(ip -4 addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d'/' -f1 | head -n1)"
+  fi
 }
 
 # === Save pentest_env ===
@@ -100,6 +103,13 @@ save_pentest_env() {
   echo "Pentest Environment saved in '${ENV_PATH}/${ENV_NAME}'"
 }
 
+# === Delete pentest_env ===
+delete_pentest_env() {
+  local env_file="$ENV_PATH/$ENV_NAME"
+
+  [[ -f "$env_file" ]] && rm -f "$env_file" && echo "✅ Pentest environment deleted: $env_file"
+}
+
 # === Load pentest_env ===
 load_pentest_env() {
   local env_file="$ENV_PATH/$ENV_NAME"
@@ -109,8 +119,8 @@ load_pentest_env() {
       echo "❌ Failed to source the pentest environment from '$env_file'." >&2
       return 1
     fi
+    echo "Pentest Environment successfully loaded from '$env_file'"
   else
-    echo "⚠️  Pentest Environment file not found: '$env_file'" >&2
     return 1
   fi
 }
@@ -187,9 +197,7 @@ if [[ -o interactive ]]; then
   if [[ "$PENTEST_ENVIRONMENT" == "exegol" ]]; then
     # === Overwrite Exegol's shell prompt ===
     update_prompt() {
-      if [[ -n "${USER}" ]]; then
-        DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER}%{$fg[white]%}]%{$reset_color%}"
-      elif [[ -n "${DOMAIN}" && -n "${USER}" ]]; then
+      if [[ ! -z "${USER}" || ! -z "${DOMAIN}" ]]; then
         DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER}@${DOMAIN}%{$fg[white]%}]%{$reset_color%}"
       fi
 
