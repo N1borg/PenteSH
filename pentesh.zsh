@@ -11,13 +11,12 @@
 # """""""""""""""""""""" Hacking Differently. - Niborg """""""""""""""""""""" #
 
 # === Environment Setup ===
-ENV_NAME=".pentesh_env"
-ENV_PATH="$HOME"
-ENV_LOG="$ENV_PATH/$ENV_NAME.log"
+PENTESH_ENV_PATH="$HOME/.pentesh_env"
+PENTESH_ENV_LOG_PATH="$PENTESH_ENV_PATH.log"
 
-AUTO_LOAD_ENV=true
-SHOW_SENSITIVE=false
-AUTO_CHANGE_ATTACKER_IP=true
+PENTESH_AUTO_LOAD_ENV=true
+PENTESH_SHOW_SENSITIVE=false
+PENTESH_AUTO_CHANGE_ATTACKER_IP=true
 
 PENTESH_ENV_VARS=(INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST AD_CS AD_USER PASSWORD NT_HASH)
 
@@ -45,11 +44,11 @@ log_changed_var() {
   local var
   for var in "${PENTESH_ENV_VARS[@]}"; do
     local new_value="${(P)var}"
-    local old_value="$(grep "${var}" "$ENV_LOG" 2>/dev/null | tail -n 1 | cut -d "'" -f 4)"
+    local old_value="$(grep "${var}" "$PENTESH_ENV_LOG_PATH" 2>/dev/null | tail -n 1 | cut -d "'" -f 4)"
 
     if [[ "$new_value" != "$old_value" ]]; then
 
-      if [[ "$var" == "INTERFACE" && -n "$INTERFACE" && "$AUTO_CHANGE_ATTACKER_IP" == true ]] && ip link show "$INTERFACE" &>/dev/null; then
+      if [[ "$var" == "INTERFACE" && -n "$INTERFACE" && "$PENTESH_AUTO_CHANGE_ATTACKER_IP" == true ]] && ip link show "$INTERFACE" &>/dev/null; then
         attacker_ip_old="$ATTACKER_IP"
         ATTACKER_IP="$(ip -4 addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d'/' -f1 | head -n1)"
 
@@ -60,10 +59,10 @@ log_changed_var() {
         fi
       fi
 
-      echo "[$(date +'%Y-%m-%d %H:%M:%S')] $var changed from '$(print -r -- "$old_value")' to '$(print -r -- "$new_value")'" >> "$ENV_LOG"
+      echo "[$(date +'%Y-%m-%d %H:%M:%S')] $var changed from '$(print -r -- "$old_value")' to '$(print -r -- "$new_value")'" >> "$PENTESH_ENV_LOG_PATH"
 
       if [[ "$attacker_ip_changed" == true ]]; then
-        echo "[$(date +'%Y-%m-%d %H:%M:%S')] ATTACKER_IP changed from '$(print -r -- "$attacker_ip_old")' to '$(print -r -- "$ATTACKER_IP")'" >> "$ENV_LOG"
+        echo "[$(date +'%Y-%m-%d %H:%M:%S')] ATTACKER_IP changed from '$(print -r -- "$attacker_ip_old")' to '$(print -r -- "$ATTACKER_IP")'" >> "$PENTESH_ENV_LOG_PATH"
         attacker_ip_changed=false
       fi
     fi
@@ -75,12 +74,15 @@ add-zsh-hook precmd log_changed_var
 
 # === Show current values ===
 show_pentesh_env() {
+  printf "%-12s : %s\n" "PENTESH_ENV_PATH" "${PENTESH_ENV_PATH}"
+  printf "%-12s : %s\n" "PENTESH_ENV_LOG_PATH" "${PENTESH_ENV_LOG_PATH}"
+  printf "%-12s : %s\n" "PENTESH_AUTO_LOAD_ENV" "${PENTESH_AUTO_LOAD_ENV}"
+  printf "%-12s : %s\n" "PENTESH_SHOW_SENSITIVE" "${PENTESH_SHOW_SENSITIVE}"
+  printf "%-12s : %s\n" "PENTESH_AUTO_CHANGE_ATTACKER_IP" "${PENTESH_AUTO_CHANGE_ATTACKER_IP}"
   local var
   for var in "${PENTESH_ENV_VARS[@]}"; do
     printf "%-12s : %s\n" "$var" "${(P)var}"
   done
-  printf "%-12s : %s\n" "AUTO_CHANGE_ATTACKER_IP" "${AUTO_CHANGE_ATTACKER_IP}"
-  printf "%-12s : %s\n" "SHOW_SENSITIVE" "${SHOW_SENSITIVE}"
 }
 
 # === Initialize environment with defaults ===
@@ -89,57 +91,57 @@ init_pentesh_env() {
 
   # Try to set the default interface
   INTERFACE="$(ip route | awk '/^default/ {print $5}' | head -n1)"
-
+  # Fallback to loopback interface if no default interface
   if [[ -z "$INTERFACE" || ! $(ip link show "$INTERFACE" 2>/dev/null) ]]; then
     echo "⚠️  Warning: Could not detect a default network interface; falling back to \"lo\"" >&2
-    INTERFACE="lo"  # fallback to loopback
+    INTERFACE="lo"
   fi
+  # Fallback to no interface if no loopback interface
   if [[ ! $(ip link show "$INTERFACE" 2>/dev/null) ]]; then
     INTERFACE=
   fi
-  if [[ -n "$INTERFACE" && "$AUTO_CHANGE_ATTACKER_IP" == true ]] && ip link show "$INTERFACE" &>/dev/null; then
+
+  # Set ATTACKER_IP if PENTESH_AUTO_CHANGE_ATTACKER_IP is true
+  if [[ -n "$INTERFACE" && "$PENTESH_AUTO_CHANGE_ATTACKER_IP" == true ]] && ip link show "$INTERFACE" &>/dev/null; then
     ATTACKER_IP="$(ip -4 addr show "$INTERFACE" | awk '/inet / {print $2}' | cut -d'/' -f1 | head -n1)"
   fi
 }
 
 # === Save pentesh_env ===
 save_pentesh_env() {
-  local default_path="$ENV_PATH/$ENV_NAME"
-  local filename="${1:-$default_path}"
-
-  # If the given filename is a directory, append $ENV_NAME
+  local filename="${1:-$PENTESH_ENV_PATH}"
+  # If the given filename is a directory, create ".pentesh_env" file
   if [[ -d "$filename" ]]; then
-    filename="$filename/$ENV_NAME"
+    filename="$filename/.pentesh_env"
   fi
-
+  print -r -- "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}'" >> "$filename"
+  print -r -- "export PENTESH_ENV_LOG_PATH='${PENTESH_ENV_LOG_PATH}'" >> "$filename"
+  print -r -- "export PENTESH_AUTO_LOAD_ENV='${PENTESH_AUTO_LOAD_ENV}'" >> "$filename"
+  print -r -- "export PENTESH_SHOW_SENSITIVE='${PENTESH_SHOW_SENSITIVE}'" >> "$filename"
+  print -r -- "export PENTESH_AUTO_CHANGE_ATTACKER_IP='${PENTESH_AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
   for var in "${PENTESH_ENV_VARS[@]}"; do
     print -r -- "export $var='${(P)var}'"
   done > "$filename"
-  print -r -- "export AUTO_CHANGE_ATTACKER_IP='${AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
-  print -r -- "export SHOW_SENSITIVE='${SHOW_SENSITIVE}'" >> "$filename"
-
   echo "PenteSH Environment saved in '${filename}'"
 }
 
 # === Delete pentesh_env ===
 delete_pentesh_env() {
-  local env_file="$ENV_PATH/$ENV_NAME"
-
-  if [[ -f "$env_file" ]]; then
-    rm -f "$env_file" && echo "✅ PenteSH environment deleted: $env_file"
+  local filename="${1:-$PENTESH_ENV_PATH}"
+  if [[ -f "$filename" ]]; then
+    rm -f "$filename" && echo "✅ PenteSH environment deleted: $filename"
   fi
 }
 
 # === Load pentesh_env ===
 load_pentesh_env() {
-  local env_file="$ENV_PATH/$ENV_NAME"
-
-  if [[ -f "$env_file" ]]; then
-    if ! source "$env_file"; then
-      echo "❌ Failed to source the PenteSH environment from '$env_file'." >&2
+  local filename="${1:-$PENTESH_ENV_PATH}"
+  if [[ -f "$filename" ]]; then
+    if ! source "$filename"; then
+      echo "❌ Failed to source the PenteSH environment from '$filename'." >&2
       return 1
     fi
-    echo "PenteSH Environment successfully loaded from '$env_file'"
+    echo "PenteSH Environment successfully loaded from '$filename'"
   else
     return 1
   fi
@@ -147,15 +149,17 @@ load_pentesh_env() {
 
 # === Show pentesh_env logs ===
 show_pentesh_env_logs() {
-  if [[ -f "$ENV_LOG" ]]; then
-    cat "$ENV_LOG"
+  local filename="${1:-$PENTESH_ENV_LOG_PATH}"
+  if [[ -f "$filename" ]]; then
+    cat "$filename"
   fi
 }
 
 # === Clean pentesh_env logs ===
 clean_pentesh_env_logs() {
-  if [[ -f "$ENV_LOG" ]]; then
-    cp "$ENV_LOG" "$ENV_LOG.bak.$(date +%s)" && : > "$ENV_LOG"
+  local filename="${1:-$PENTESH_ENV_LOG_PATH}"
+  if [[ -f "$filename" ]]; then
+    cp "$filename" "$filename.bak.$(date +%s)" && : > "$filename"
   fi
 }
 
@@ -190,30 +194,28 @@ internal_pentesh_prompt() {
     fi
     [[ -n "${DOMAIN}" ]]     && parts+=("%F{yellow}${DOMAIN}]%f")
   fi
+
   [[ -n "${ATTACKER_IP}" ]]  && parts+=(" %F{green}[💻 ATTACKER_IP=${ATTACKER_IP}]%f")
   [[ -n "${TARGET}" ]]       && parts+=(" %F{cyan}[🎯 TARGET=${TARGET}]%f")
   [[ -n "${DC_IP}" ]]        && parts+=(" %F{red}[🏰 DC_IP=${DC_IP}]%f")
   [[ -n "${DC_HOST}" ]]      && parts+=(" %F{green}[🏠 DC_HOST=${DC_HOST}]%f")
   [[ -n "${AD_CS}" ]]        && parts+=(" %F{yellow}[📜 AD_CS=${AD_CS}]%f")
   if [[ -n "${PASSWORD}" ]]; then
-    if [[ "$SHOW_SENSITIVE" == true ]]; then
+    if [[ "$PENTESH_SHOW_SENSITIVE" == true ]]; then
       parts+=(" %F{blue}[🔑 PASSWORD=${PASSWORD}]%f")
     else
       parts+=(" %F{blue}[PASSWORD]%f")
     fi
   fi
-
   if [[ -n "${NT_HASH}" ]]; then
-    if [[ "$SHOW_SENSITIVE" == true ]]; then
+    if [[ "$PENTESH_SHOW_SENSITIVE" == true ]]; then
       parts+=(" %F{blue}[🔐 NT_HASH=${NT_HASH}]%f")
     else
       parts+=(" %F{blue}[NT_HASH]%f")
     fi
   fi
-
   [[ -n "${INTERFACE}" ]]    && parts+=(" %F{214}[INTERFACE]%f")
   [[ -n "${DOMAIN_SID}" ]]   && parts+=(" %F{magenta}[DOMAIN_SID]%f")
-
   if (( ${#parts[@]} )); then
     print -n "${(j::)parts} "
   fi
@@ -221,7 +223,7 @@ internal_pentesh_prompt() {
 
 # === Custom Prompt Hook ===
 if [[ -o interactive ]]; then
-  [[ $AUTO_LOAD_ENV == true ]] && load_pentesh_env || init_pentesh_env
+  [[ $PENTESH_AUTO_LOAD_ENV == true ]] && load_pentesh_env || init_pentesh_env
 
   if [[ "$PENTESH_ENVIRONMENT" == "exegol" ]]; then
     # === Overwrite Exegol's shell prompt ===
@@ -229,7 +231,6 @@ if [[ -o interactive ]]; then
       if [[ ! -z "${USER}" || ! -z "${DOMAIN}" ]]; then
         DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER}@${DOMAIN}%{$fg[white]%}]%{$reset_color%}"
       fi
-
       PROMPT="$LOGGING$DB_PROMPT$TIME_%{$FX[bold]$FG[013]%} $EXEGOL_HOSTNAME %{$fg_bold[blue]%}%(!.%1~.%c)$(internal_pentesh_prompt)
 %{$fg_bold[blue]%}$(prompt_char)%{$reset_color%} "
     }

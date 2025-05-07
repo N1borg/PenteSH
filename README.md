@@ -91,7 +91,7 @@ zsh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/
 zsh -c "wget -qO \$HOME/.exegol/my-resources/setup/zsh/zshrc 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
 ```
 
-Then source the config or restart your terminal:
+Then source your ZSH configuration or restart your terminal:
 ```bash
 source $HOME/.zshrc
 ```
@@ -101,12 +101,12 @@ source $HOME/.zshrc
 | Command         | Description                              |
 |----------------|-------------------------------------------|
 | `penv`         | Show current environment                  |
-| `penv-reset`   | Reset all environment variables           |
-| `penv-save`    | Save current environment to a given file (\$ENV_PATH/\$ENV_NAME by default) |
-| `penv-del`     | Delete saved environment                  |
-| `penv-load`    | Load environment from file                |
-| `penv-log`     | Show environment change log               |
-| `penv-log-clean` | Clean environment change log            |
+| `penv-reset`   | Reset all current environment variables |
+| `penv-save`    | Save current environment to a given file ($PENTESH_ENV_PATH by default) |
+| `penv-del`     | Delete saved given environment ($PENTESH_ENV_PATH by default) |
+| `penv-load`    | Load given environment ($PENTESH_ENV_PATH by default) |
+| `penv-log`     | Show given environment change logs ($PENTESH_ENV_LOG_PATH by default) |
+| `penv-log-clean` | Clean given environment change logs ($PENTESH_ENV_LOG_PATH by default) |
 | `penv-help`    | Show help for available commands          |
 
 ## 🧰 Configuration
@@ -115,32 +115,28 @@ You can customize the behavior of the environment manager by adjusting the setti
 
 ### 1. Boolean Variables
 
-- `AUTO_LOAD_ENV`
+- `PENTESH_AUTO_LOAD_ENV`
     - **Type**: Boolean (`true` / `false`)
     - **Default**: `true`
-    - **Description**: When set to `true`, the script will attempt to load the pentesting environment automatically from the specified file (`$ENV_PATH/$ENV_NAME`) during shell startup. If the file doesn't exist, it initializes a new default environment.
-- `SHOW_SENSITIVE`
+    - **Description**: When set to `true`, the script will attempt to load the pentesting environment automatically from the specified file (`$PENTESH_ENV_PATH`) during shell startup. If the file doesn't exist, it initializes a new default environment.
+- `PENTESH_SHOW_SENSITIVE`
     - **Type**: Boolean (`true` / `false`)
     - **Default**: `false`
     - **Description**: Controls whether sensitive values like `PASSWORD` and `NT_HASH` are displayed in the prompt. If set to `false`, sensitive values are not displayed.
-- `AUTO_CHANGE_ATTACKER_IP`
+- `PENTESH_AUTO_CHANGE_ATTACKER_IP`
     - **Type**: Boolean (`true` / `false`)
     - **Default**: `true`
     - **Description**: If enabled, the `ATTACKER_IP` will be automatically updated whenever the `INTERFACE` value is changed (e.g., on VPN toggle or network switch). Otherwise, it remains static unless changed manually
 
 ### 2. Environment Path Setup
 
-- `ENV_NAME`
+- `PENTESH_ENV_PATH`
     - **Type**: String (Directory Path)
-    - **Default**: `.pentesh_env`
-    - **Description**: The name of your default pentesting environment file.
-- `ENV_PATH`
+    - **Default**: `$HOME/.pentesh_env`
+    - **Description**: The path of your default pentesting environment file.
+- `PENTESH_ENV_LOG_PATH`
     - **Type**: String (Directory Path)
-    - **Default**: `$HOME`
-    - **Description**: The directory where your default pentesting environment and log files are stored.
-- `ENV_LOG`
-    - **Type**: String (Directory Path)
-    - **Default**: `$ENV_PATH/$ENV_NAME.log`
+    - **Default**: `$PENTESH_ENV_PATH.log`
     - **Description**: The path of your pentesting environment log file.
 
 ## 📝 Logging Example
@@ -186,4 +182,3 @@ export AUTO_LOAD_ENV='true'
 ## Possible ideas
 
 - Add `$TargetObject` ?
-- Multiple environment and possibility to switch between them
