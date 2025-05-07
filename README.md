@@ -174,8 +174,7 @@ export AUTO_LOAD_ENV='true'
 
 ## To-Do
 
-- Variables colors & emojis configuration
-- Dynamic variables set (adding and removing our own variables)
+- Dynamic variables set (adding and removing our own variables) and so variables colors & emojis configuration
 - Fix, on Exegol, `ATTACKER_IP` which changes only after the next prompt display when `INTERFACE` is modified, instead of updating immediately.
 - `MACADDRESS` displayed in a possible Red Team mode for spoofing in rushing moments
 
