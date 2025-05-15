@@ -18,7 +18,20 @@ PENTESH_AUTO_LOAD_ENV=true
 PENTESH_SHOW_SENSITIVE=false
 PENTESH_AUTO_CHANGE_ATTACKER_IP=true
 
-PENTESH_ENV_VARS=(INTERFACE ATTACKER_IP TARGET DOMAIN DOMAIN_SID DC_IP DC_HOST AD_CS AD_USER PASSWORD NT_HASH)
+# Define structured metadata: VAR COLOR EMOJI SENSITIVE
+PENTESH_ENV_DISPLAY_META=(
+  "AD_USER|||"
+  "DOMAIN|||"
+  "ATTACKER_IP|green|💻|false"
+  "TARGET|cyan|🎯|false"
+  "DC_IP|red|🏰|false"
+  "DC_HOST|green|🏠|false"
+  "AD_CS|yellow|📜|false"
+  "PASSWORD|blue|🔑|true"
+  "NT_HASH|blue|🔐|true"
+  "INTERFACE|214||false"
+  "DOMAIN_SID|magenta||false"
+)
 
 autoload -Uz add-zsh-hook
 
@@ -40,9 +53,11 @@ detect_environment
 log_changed_var() {
   local attacker_ip_old=""
   local attacker_ip_changed=false
+  local entry var
 
-  local var
-  for var in "${PENTESH_ENV_VARS[@]}"; do
+  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+    IFS='|' read -r var _ <<< "$entry"
+
     local new_value="${(P)var}"
     local old_value="$(grep "${var}" "$PENTESH_ENV_LOG_PATH" 2>/dev/null | tail -n 1 | cut -d "'" -f 4)"
 
@@ -79,8 +94,10 @@ show_pentesh_env() {
   printf "%-12s : %s\n" "PENTESH_AUTO_LOAD_ENV" "${PENTESH_AUTO_LOAD_ENV}"
   printf "%-12s : %s\n" "PENTESH_SHOW_SENSITIVE" "${PENTESH_SHOW_SENSITIVE}"
   printf "%-12s : %s\n" "PENTESH_AUTO_CHANGE_ATTACKER_IP" "${PENTESH_AUTO_CHANGE_ATTACKER_IP}"
-  local var
-  for var in "${PENTESH_ENV_VARS[@]}"; do
+  local entry var
+  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+    IFS='|' read -r var _ <<< "$entry"
+
     printf "%-12s : %s\n" "$var" "${(P)var}"
   done
 }
@@ -119,7 +136,10 @@ save_pentesh_env() {
   print -r -- "export PENTESH_AUTO_LOAD_ENV='${PENTESH_AUTO_LOAD_ENV}'" >> "$filename"
   print -r -- "export PENTESH_SHOW_SENSITIVE='${PENTESH_SHOW_SENSITIVE}'" >> "$filename"
   print -r -- "export PENTESH_AUTO_CHANGE_ATTACKER_IP='${PENTESH_AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
-  for var in "${PENTESH_ENV_VARS[@]}"; do
+  local entry var
+  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+    IFS='|' read -r var _ <<< "$entry"
+
     print -r -- "export $var='${(P)var}'"
   done > "$filename"
   echo "PenteSH Environment saved in '${filename}'"
@@ -195,27 +215,29 @@ internal_pentesh_prompt() {
     [[ -n "${DOMAIN}" ]]     && parts+=("%F{yellow}${DOMAIN}]%f")
   fi
 
-  [[ -n "${ATTACKER_IP}" ]]  && parts+=(" %F{green}[💻 ATTACKER_IP=${ATTACKER_IP}]%f")
-  [[ -n "${TARGET}" ]]       && parts+=(" %F{cyan}[🎯 TARGET=${TARGET}]%f")
-  [[ -n "${DC_IP}" ]]        && parts+=(" %F{red}[🏰 DC_IP=${DC_IP}]%f")
-  [[ -n "${DC_HOST}" ]]      && parts+=(" %F{green}[🏠 DC_HOST=${DC_HOST}]%f")
-  [[ -n "${AD_CS}" ]]        && parts+=(" %F{yellow}[📜 AD_CS=${AD_CS}]%f")
-  if [[ -n "${PASSWORD}" ]]; then
-    if [[ "$PENTESH_SHOW_SENSITIVE" == true ]]; then
-      parts+=(" %F{blue}[🔑 PASSWORD=${PASSWORD}]%f")
+  # Display variables if set, emoji if set and values if emoji AND !$PENTESH_SHOW_SENSITIVE if $sensitive
+  local entry var color emoji sensitive label value
+  local -a fields
+  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+    IFS='|' read -r var color emoji sensitive <<< "$entry"
+
+    value="${(P)var}"
+    [[ -z "$value" ]] && continue
+    [[ -z "$sensitive" ]] && continue
+
+    if [[ -n "$emoji" ]]; then
+      if [[ "$sensitive" == "true" && "$PENTESH_SHOW_SENSITIVE" != "true" ]]; then
+        label="${emoji} ${var}"
+      else
+        label="${emoji} ${var}=${value}"
+      fi
     else
-      parts+=(" %F{blue}[PASSWORD]%f")
+      label="${var}"
     fi
-  fi
-  if [[ -n "${NT_HASH}" ]]; then
-    if [[ "$PENTESH_SHOW_SENSITIVE" == true ]]; then
-      parts+=(" %F{blue}[🔐 NT_HASH=${NT_HASH}]%f")
-    else
-      parts+=(" %F{blue}[NT_HASH]%f")
-    fi
-  fi
-  [[ -n "${INTERFACE}" ]]    && parts+=(" %F{214}[INTERFACE]%f")
-  [[ -n "${DOMAIN_SID}" ]]   && parts+=(" %F{magenta}[DOMAIN_SID]%f")
+
+    parts+=(" %F{$color}[${label}]%f")
+  done
+
   if (( ${#parts[@]} )); then
     print -n "${(j::)parts} "
   fi

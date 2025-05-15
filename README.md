@@ -18,11 +18,42 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 
 ## 📚 Summary
 
+- [🚀 Quick Start](#-quick-start)
 - [🎯 Purpose](#-purpose)
 - [🧠 Tracked Variables](#-tracked-variables)
 - [🔧 Features](#-features)
-- [🚀 Quick Start](#-quick-start)
 - [💻 Commands](#-commands)
+
+## 🚀 Quick Start
+
+### Installation on Kali Linux (without Exegol)
+
+- Using cURL
+```bash
+sh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' -o \$HOME/.pentesh.zsh && echo 'source \$HOME/.pentesh.zsh' >> \$HOME/.zshrc"
+```
+
+- Using Wget
+```bash
+sh -c "wget -qO \$HOME/.pentesh.zsh 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.pentesh.zsh' >> \$HOME/.zshrc"
+```
+
+### Installation on Kali Linux with Exegol `:)`
+
+- Using cURL
+```bash
+sh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' -o \$HOME/.exegol/my-resources/setup/zsh/zshrc && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
+```
+
+- Using Wget
+```bash
+sh -c "wget -qO \$HOME/.exegol/my-resources/setup/zsh/zshrc 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
+```
+
+Then source your ZSH configuration or restart your terminal:
+```bash
+source $HOME/.zshrc
+```
 
 ## 🎯 Purpose
 
@@ -64,37 +95,6 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 - **Auto-load and auto-save environment** with fallbacks
 
 ---
-
-## 🚀 Quick Start
-
-### Installation on Kali Linux (without Exegol)
-
-- Using cURL
-```bash
-zsh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' -o \$HOME/.pentesh.zsh && echo 'source \$HOME/.pentesh.zsh' >> \$HOME/.zshrc"
-```
-
-- Using Wget
-```bash
-zsh -c "wget -qO \$HOME/.pentesh.zsh 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.pentesh.zsh' >> \$HOME/.zshrc"
-```
-
-### Installation on Kali Linux with Exegol `:)`
-
-- Using cURL
-```bash
-zsh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' -o \$HOME/.exegol/my-resources/setup/zsh/zshrc && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
-```
-
-- Using Wget
-```bash
-zsh -c "wget -qO \$HOME/.exegol/my-resources/setup/zsh/zshrc 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
-```
-
-Then source your ZSH configuration or restart your terminal:
-```bash
-source $HOME/.zshrc
-```
 
 ## 💻 Commands
 
@@ -177,6 +177,8 @@ export AUTO_LOAD_ENV='true'
 - Dynamic variables set (adding and removing our own variables) and so variables colors & emojis configuration
 - Fix, on Exegol, `ATTACKER_IP` which changes only after the next prompt display when `INTERFACE` is modified, instead of updating immediately.
 - `MACADDRESS` displayed in a possible Red Team mode for spoofing in rushing moments
+- Expand compatibility to different shells
+- Expand compatibility to different Linux distros
 
 ## Possible ideas
 
