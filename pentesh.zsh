@@ -19,7 +19,7 @@ PENTESH_SHOW_SENSITIVE=false
 PENTESH_AUTO_CHANGE_ATTACKER_IP=true
 
 # Define structured metadata: VAR COLOR EMOJI SENSITIVE
-PENTESH_ENV_DISPLAY_META=(
+PENTESH_ENV_VARS=(
   "AD_USER|||"
   "DOMAIN|||"
   "ATTACKER_IP|green|💻|false"
@@ -55,7 +55,7 @@ log_changed_var() {
   local attacker_ip_changed=false
   local entry var
 
-  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+  for entry in "${PENTESH_ENV_VARS[@]}"; do
     IFS='|' read -r var _ <<< "$entry"
 
     local new_value="${(P)var}"
@@ -95,7 +95,7 @@ show_pentesh_env() {
   printf "%-12s : %s\n" "PENTESH_SHOW_SENSITIVE" "${PENTESH_SHOW_SENSITIVE}"
   printf "%-12s : %s\n" "PENTESH_AUTO_CHANGE_ATTACKER_IP" "${PENTESH_AUTO_CHANGE_ATTACKER_IP}"
   local entry var
-  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+  for entry in "${PENTESH_ENV_VARS[@]}"; do
     IFS='|' read -r var _ <<< "$entry"
 
     printf "%-12s : %s\n" "$var" "${(P)var}"
@@ -104,7 +104,12 @@ show_pentesh_env() {
 
 # === Initialize environment with defaults ===
 init_pentesh_env() {
-  TARGET= DOMAIN= DOMAIN_SID= DC_IP= DC_HOST= AD_CS= AD_USER= PASSWORD= NT_HASH=
+  # Unset all variables defined in the metadata
+  local entry var
+  for entry in "${PENTESH_ENV_VARS[@]}"; do
+    IFS='|' read -r var _ <<< "$entry"
+    unset $var
+  done
 
   # Try to set the default interface
   INTERFACE="$(ip route | awk '/^default/ {print $5}' | head -n1)"
@@ -131,17 +136,19 @@ save_pentesh_env() {
   if [[ -d "$filename" ]]; then
     filename="$filename/.pentesh_env"
   fi
-  print -r -- "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}'" >> "$filename"
-  print -r -- "export PENTESH_ENV_LOG_PATH='${PENTESH_ENV_LOG_PATH}'" >> "$filename"
-  print -r -- "export PENTESH_AUTO_LOAD_ENV='${PENTESH_AUTO_LOAD_ENV}'" >> "$filename"
-  print -r -- "export PENTESH_SHOW_SENSITIVE='${PENTESH_SHOW_SENSITIVE}'" >> "$filename"
-  print -r -- "export PENTESH_AUTO_CHANGE_ATTACKER_IP='${PENTESH_AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
+  echo "" > "$filename"
+  echo "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}'" >> "$filename"
+  echo "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}' $filename"
+  echo "export PENTESH_ENV_LOG_PATH='${PENTESH_ENV_LOG_PATH}'" >> "$filename"
+  echo "export PENTESH_AUTO_LOAD_ENV='${PENTESH_AUTO_LOAD_ENV}'" >> "$filename"
+  echo "export PENTESH_SHOW_SENSITIVE='${PENTESH_SHOW_SENSITIVE}'" >> "$filename"
+  echo "export PENTESH_AUTO_CHANGE_ATTACKER_IP='${PENTESH_AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
   local entry var
-  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+  for entry in "${PENTESH_ENV_VARS[@]}"; do
     IFS='|' read -r var _ <<< "$entry"
 
-    print -r -- "export $var='${(P)var}'"
-  done > "$filename"
+    echo "export $var='${(P)var}'"
+  done >> "$filename"
   echo "PenteSH Environment saved in '${filename}'"
 }
 
@@ -218,7 +225,7 @@ internal_pentesh_prompt() {
   # Display variables if set, emoji if set and values if emoji AND !$PENTESH_SHOW_SENSITIVE if $sensitive
   local entry var color emoji sensitive label value
   local -a fields
-  for entry in "${PENTESH_ENV_DISPLAY_META[@]}"; do
+  for entry in "${PENTESH_ENV_VARS[@]}"; do
     IFS='|' read -r var color emoji sensitive <<< "$entry"
 
     value="${(P)var}"
