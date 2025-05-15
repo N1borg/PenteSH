@@ -1,6 +1,11 @@
 # PenteSH
 
-**PenteSH** is a portable, Exegol- and Kali-compatible Zsh configuration that helps you manage and persist your pentesting environment seamlessly — all from your terminal.
+<div>
+  <a href="https://github.com/N1borg/PenteSH/stargazers"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/N1borg/PenteSH"></a>
+  <a href="https://www.linkedin.com/in/robin-caboche/"><img alt="GitHub Repo stars" src="https://img.shields.io/badge/linkedin-%230077B5.svg?logo=linkedin&logoColor=white"></a>
+</div>
+
+**PenteSH** is a customizable Zsh environment manager designed specifically for penetration testers and red teamers. It streamlines the process of tracking and managing key operational variables across different pentest sessions, helping you stay organized and informed in complex attack scenarios.
 
 Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automatic updates, persistent storage, and a smart prompt overlay.
 
@@ -16,7 +21,7 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 
 ![Example of PenteSH with smbclient-ng](./assets/smbclient-ng-example-exegol.png)
 
-## 📚 Summary
+## 📚 Table of contents
 
 - [🚀 Quick Start](#-quick-start)
 - [🎯 Purpose](#-purpose)
@@ -33,11 +38,6 @@ Track critical context like `ATTACKER_IP`, `TARGET`, and `DOMAIN`, with automati
 sh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' -o \$HOME/.pentesh.zsh && echo 'source \$HOME/.pentesh.zsh' >> \$HOME/.zshrc"
 ```
 
-- Using Wget
-```bash
-sh -c "wget -qO \$HOME/.pentesh.zsh 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.pentesh.zsh' >> \$HOME/.zshrc"
-```
-
 ### Installation on Kali Linux with Exegol `:)`
 
 - Using cURL
@@ -45,63 +45,57 @@ sh -c "wget -qO \$HOME/.pentesh.zsh 'https://raw.githubusercontent.com/N1borg/Pe
 sh -c "curl -fsSL 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' -o \$HOME/.exegol/my-resources/setup/zsh/zshrc && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
 ```
 
-- Using Wget
-```bash
-sh -c "wget -qO \$HOME/.exegol/my-resources/setup/zsh/zshrc 'https://raw.githubusercontent.com/N1borg/PenteSH/refs/heads/main/pentesh.zsh' && echo 'source \$HOME/.exegol/my-resources/setup/zsh/zshrc' >> \$HOME/.zshrc"
-```
-
 Then source your ZSH configuration or restart your terminal:
 ```bash
 source $HOME/.zshrc
 ```
 
+Or with Exegol:
+```bash
+source $HOME/.exegol/my-resources/setup/zsh/zshrc
+```
+
 ## 🎯 Purpose
 
-- ✅ Detects and identifies whether you're running inside **Exegol** or **Kali Linux**.
-- ✅ Automatically manages variables like `INTERFACE`, `ATTACKER_IP`, `TARGET`, `DOMAIN`, `DC_IP`, etc.
-- ✅ Updates `ATTACKER_IP` dynamically if your interface changes.
-- ✅ Logs every change to tracked variables in a persistent `.pentesh_env.log` file.
-- ✅ Enhances your Zsh prompt with contextual information.
-- ✅ Automatically saves the pentest session state after each command and upon shell exit.
-- ✅ Loads and saves the environment automatically with fallbacks if needed.
-
----
+- ✅ **Contextual Variable Management**: Centralizes important pentest variables such as `ATTACKER_IP`, `TARGET`, `DOMAIN`, and credentials, making them easy to set, update, and access.
+- ✅ **Seamless Shell Integration**: Built on standard shell variable conventions, it works natively with global environment variables in Zsh (and Bash and others soon...). This allows tools, scripts, and one-liners to directly access your session’s variables without special wrappers or custom syntax.
+- ✅ **Dynamic Network Adaptation**: Monitor your `INTERFACE` and automatically updates your `ATTACKER_IP` to reflect current network settings without manual intervention.
+- ✅ **Change Auditing**: Logs every modification to tracked variables with timestamps, creating a persistent audit trail for accountability and troubleshooting.
+- ✅ **Session Persistence**: Supports saving and loading of environment snapshots to disk, allowing you to pause and resume complex engagements seamlessly.
+- ✅ **User-Friendly Controls**: Provides intuitive command aliases and help commands to manage your pentest environment with minimal friction.
 
 ## 🧠 Tracked Variables
 
 | Variable       | Description                         |
 |----------------|-------------------------------------|
-| `INTERFACE`    | Network interface used for attacks  |
-| `ATTACKER_IP`  | Attacker's IP bound to `INTERFACE`  |
-| `TARGET`       | Target hostname or IP               |
+| `AD_USER`      | AD username or user (as $USER used) |
 | `DOMAIN`       | Target AD domain                    |
-| `DOMAIN_SID`   | SID of the target domain            |
-| `DC_IP`        | Domain controller IP                |
+| `ATTACKER_IP`  | Attacker's IP bound to `INTERFACE`  |
+| `TARGET`       | Target hostname or IP address       |
+| `DC_IP`        | Domain controller IP address        |
 | `DC_HOST`      | Domain controller hostname          |
-| `AD_CS`        | AD Certificate Services IP          |
-| `AD_USER`      | AD username                         |
-| `PASSWORD`     | AD password                         |
+| `AD_CS`        | AD Certificate Services IP address  |
+| `PASSWORD`     | Password of the target user         |
 | `NT_HASH`      | NTLM hash of the user               |
+| `INTERFACE`    | Network interface used for attacks  |
+| `DOMAIN_SID`   | SID of the target domain            |
 
----
+You can add more and customize the default ones  
 
 ## 🔧 Features
 
 - **Auto-detection** of environment (`kali`, `exegol`)
 - **Smart prompt** that displays AD context, IPs, and more
 - **Automatic IP updates** when network interface changes
-- **Persistent session saving** on every prompt return (`precmd`)
 - **Change tracking** for audit/debug use
 - **Auto-load and auto-save environment** with fallbacks
 
----
-
 ## 💻 Commands
 
-| Command         | Description                              |
+| Command        | Description                               |
 |----------------|-------------------------------------------|
 | `penv`         | Show current environment                  |
-| `penv-reset`   | Reset all current environment variables |
+| `penv-reset`   | Reset all current environment variables   |
 | `penv-save`    | Save current environment to a given file ($PENTESH_ENV_PATH by default) |
 | `penv-del`     | Delete saved given environment ($PENTESH_ENV_PATH by default) |
 | `penv-load`    | Load given environment ($PENTESH_ENV_PATH by default) |
@@ -156,25 +150,26 @@ You can customize the behavior of the environment manager by adjusting the setti
 ## 🛠️ PenteSH Environment Example
 
 ```bash
-export INTERFACE='eth0'
+export AD_USER='administrator'
+export DOMAIN='corp.local'
 export ATTACKER_IP='192.168.56.101'
 export TARGET='192.168.56.110'
-export DOMAIN='corp.local'
-export DOMAIN_SID='S-1-5-21-123456789-987654321-1112131415'
 export DC_IP='192.168.56.10'
 export DC_HOST='dc01.corp.local'
 export AD_CS='192.168.56.20'
-export AD_USER='administrator'
 export PASSWORD='P@ssw0rd!'
 export NT_HASH=''
-export AUTO_CHANGE_ATTACKER_IP='true'
-export SHOW_SENSITIVE='true'
-export AUTO_LOAD_ENV='true'
+export INTERFACE='eth0'
+export DOMAIN_SID='S-1-5-21-123456789-987654321-1112131415'
+export PENTESH_ENV_PATH='/home/kali/.pentesh_env'
+export PENTESH_ENV_LOG_PATH='/home/kali/.pentesh_env.log'
+export PENTESH_AUTO_LOAD_ENV='true'
+export PENTESH_SHOW_SENSITIVE='true'
+export PENTESH_AUTO_CHANGE_ATTACKER_IP='true'
 ```
 
 ## To-Do
 
-- Dynamic variables set (adding and removing our own variables) and so variables colors & emojis configuration
 - Fix, on Exegol, `ATTACKER_IP` which changes only after the next prompt display when `INTERFACE` is modified, instead of updating immediately.
 - `MACADDRESS` displayed in a possible Red Team mode for spoofing in rushing moments
 - Expand compatibility to different shells

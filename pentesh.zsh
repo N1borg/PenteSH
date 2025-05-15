@@ -136,19 +136,17 @@ save_pentesh_env() {
   if [[ -d "$filename" ]]; then
     filename="$filename/.pentesh_env"
   fi
-  echo "" > "$filename"
-  echo "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}'" >> "$filename"
-  echo "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}' $filename"
-  echo "export PENTESH_ENV_LOG_PATH='${PENTESH_ENV_LOG_PATH}'" >> "$filename"
-  echo "export PENTESH_AUTO_LOAD_ENV='${PENTESH_AUTO_LOAD_ENV}'" >> "$filename"
-  echo "export PENTESH_SHOW_SENSITIVE='${PENTESH_SHOW_SENSITIVE}'" >> "$filename"
-  echo "export PENTESH_AUTO_CHANGE_ATTACKER_IP='${PENTESH_AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
   local entry var
   for entry in "${PENTESH_ENV_VARS[@]}"; do
     IFS='|' read -r var _ <<< "$entry"
 
     echo "export $var='${(P)var}'"
-  done >> "$filename"
+  done > "$filename"
+  echo "export PENTESH_ENV_PATH='${PENTESH_ENV_PATH}'" >> "$filename"
+  echo "export PENTESH_ENV_LOG_PATH='${PENTESH_ENV_LOG_PATH}'" >> "$filename"
+  echo "export PENTESH_AUTO_LOAD_ENV='${PENTESH_AUTO_LOAD_ENV}'" >> "$filename"
+  echo "export PENTESH_SHOW_SENSITIVE='${PENTESH_SHOW_SENSITIVE}'" >> "$filename"
+  echo "export PENTESH_AUTO_CHANGE_ATTACKER_IP='${PENTESH_AUTO_CHANGE_ATTACKER_IP}'" >> "$filename"
   echo "PenteSH Environment saved in '${filename}'"
 }
 
@@ -257,8 +255,8 @@ if [[ -o interactive ]]; then
   if [[ "$PENTESH_ENVIRONMENT" == "exegol" ]]; then
     # === Overwrite Exegol's shell prompt ===
     update_prompt() {
-      if [[ ! -z "${USER}" || ! -z "${DOMAIN}" ]]; then
-        DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER}@${DOMAIN}%{$fg[white]%}]%{$reset_color%}"
+      if [[ ! -z "${USER:-${AD_USER}}" || ! -z "${DOMAIN}" ]]; then
+        DB_PROMPT="%{$fg[white]%}[%{$fg[yellow]%}${USER:-${AD_USER}}@${DOMAIN}%{$fg[white]%}]%{$reset_color%}"
       fi
       PROMPT="$LOGGING$DB_PROMPT$TIME_%{$FX[bold]$FG[013]%} $EXEGOL_HOSTNAME %{$fg_bold[blue]%}%(!.%1~.%c)$(internal_pentesh_prompt)
 %{$fg_bold[blue]%}$(prompt_char)%{$reset_color%} "
